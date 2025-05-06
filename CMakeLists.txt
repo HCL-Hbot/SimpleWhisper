@@ -72,11 +72,11 @@ if(SIMPLEWHISPER_ROS2_PACKAGE_BUILD)
     simplewhisper_node
     DESTINATION lib/${PROJECT_NAME})
     install(TARGETS
-      simplewhisper whisper ggml
+      simplewhisper whisper
       DESTINATION lib/
     )
     install(TARGETS
-      simplewhisper whisper ggml
+      simplewhisper whisper
       DESTINATION lib64/
     )
 endif()
