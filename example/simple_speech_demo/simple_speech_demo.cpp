@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
       std::string text_heard = sw.do_inference(audio_buffer);
 
       /* Was there any text returned from the whisper inference? If no text, we
-       * obviously don't want to run llama on it!*/
+       * obviously don't want to run whisper on it again!*/
       if (text_heard.empty()) {
         /* No words were captured! Continue with capturing new audio; */
         audio->clear();
