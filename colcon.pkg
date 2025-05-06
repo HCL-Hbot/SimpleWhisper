@@ -1,6 +1,7 @@
 {
-    "name": "custom_pkg",
+    "name": "simplewhisper",
     "cmake-args":[
-        "-G Ninja"
+        "-G Ninja",
+        "-DSIMPLEWHISPER_ROS2_PACKAGE_BUILD=ON"
     ]
 }

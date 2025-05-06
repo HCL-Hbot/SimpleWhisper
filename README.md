@@ -1,4 +1,4 @@
-# ROS2_Package_Template
+# SimpleWhisper
 Template project for ROS2 with automated pipelines
 
 ## What to change when adopting this template

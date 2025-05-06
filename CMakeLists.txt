@@ -7,7 +7,7 @@ project(simplewhisper CXX)
 include(FetchContent)
 
 # Some of the more popular gpu options (VULKAN is great for NON-nvidia & CUDA is almost must-have for nvidia)
-option(GGML_VULKAN "Run with vulkan backend" ON)
+option(GGML_VULKAN "Run with vulkan backend" OFF)
 option(GGML_CUDA "Run with CUDA backend" OFF)
 
 # Perf options enables the profiling (tok/s) of the runs
@@ -17,7 +17,7 @@ option(GGML_PERF ON)
 option(SIMPLEWHISPER_BUILD_EXAMPLE "Build example" ON)
 
 # Optionally enable ROS2 package build (Requires ROS2 jazzy to be installed!)
-option(SIMPLEWHISPER_ROS2_PACKAGE_BUILD "Build a ROS2 package" ON)
+option(SIMPLEWHISPER_ROS2_PACKAGE_BUILD "Build a ROS2 package" OFF)
 
 find_package(SDL2 REQUIRED)
 
@@ -71,31 +71,18 @@ if(SIMPLEWHISPER_ROS2_PACKAGE_BUILD)
   install(TARGETS
     simplewhisper_node
     DESTINATION lib/${PROJECT_NAME})
+    install(TARGETS
+      simplewhisper whisper ggml
+      DESTINATION lib/
+    )
+    install(TARGETS
+      simplewhisper whisper ggml
+      DESTINATION lib64/
+    )
 endif()
 
 if(SIMPLEWHISPER_BUILD_EXAMPLE)
   if(SIMPLEWHISPER_ROS2_PACKAGE_BUILD)
-    # find_package(ament_cmake REQUIRED)
-    # find_package(rclcpp REQUIRED)
-    # find_package(std_srvs REQUIRED)
-    # find_package(std_msgs REQUIRED)
-    # add_executable(simplellama_demo ${CMAKE_CURRENT_LIST_DIR}/example/ros2_demo/ros2_demo.cpp)
-    # ament_target_dependencies(simplellama_demo
-    #   rclcpp
-    #   std_msgs
-    #   std_srvs
-    # )
-    # install(TARGETS
-    #   simplellama_demo
-    #   DESTINATION lib/${PROJECT_NAME})
-    # install(TARGETS
-    #   simplellama llama
-    #   DESTINATION lib/
-    # )
-    # install(TARGETS
-    #   simplellama llama
-    #   DESTINATION lib64/
-    # )
   else()
     add_executable(simple_speech_demo ${CMAKE_CURRENT_LIST_DIR}/example/simple_speech_demo/simple_speech_demo.cpp
                                       ${CMAKE_CURRENT_LIST_DIR}/example/simple_speech_demo/audio_async/audio_async.cpp)

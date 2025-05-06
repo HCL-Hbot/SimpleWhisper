@@ -7,7 +7,7 @@
   Simple whisper node
   </description>
 
-  <maintainer email="example@example.com">example</maintainer>
+  <maintainer email="hogeweyv@gmail.com">Hoog-v</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
