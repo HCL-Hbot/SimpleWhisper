@@ -2,21 +2,34 @@
 
 #define AUDIO_DEFAULT_MIC -1
 #define AUDIO_SAMPLE_RATE 16000
+constexpr int AUDIO_BUFFER_SIZE_MS = 2000;
+constexpr int VAD_LOOKBACK_MS = 1250;
+constexpr int QUEUE_SIZE = 10;
 
 WhisperNode::WhisperNode() : Node("whisper_node"), keep_running_(true) {
+  // Declare parameters
   declare_parameter<std::string>("model_path", "ggml-large-v3-turbo-q5_0.bin");
+  declare_parameter<std::string>("language", "en");
+  declare_parameter<std::string>("bot_name", "Llama");
+  declare_parameter<std::string>("output_topic", "whisper/text");
+  declare_parameter<std::string>("audio_in_topic", "whisper/audio_in");
+  declare_parameter<bool>("translate", false);
   declare_parameter<float>("vad_threshold", 0.6f);
   declare_parameter<float>("freq_threshold", 100.0f);
   declare_parameter<int>("voice_duration_ms", 10000);
 
-  std::string model_path = get_parameter("model_path").as_string();
+  // Read and assign thresholds and timing
   vad_threshold_ = get_parameter("vad_threshold").as_double();
   freq_threshold_ = get_parameter("freq_threshold").as_double();
   voice_duration_ms_ = get_parameter("voice_duration_ms").as_int();
 
   // Whisper setup
   simplewhisper_model_params model_params;
-  model_params.model_wsp = model_path;
+  model_params.model_wsp = get_parameter("model_path").as_string();
+  model_params.language = get_parameter("language").as_string();
+  model_params.bot_name = get_parameter("bot_name").as_string();
+  model_params.translate = get_parameter("translate").as_bool();
+
   whisper_ = std::make_shared<SimpleWhisper>(model_params);
   whisper_->init();
 
@@ -27,12 +40,17 @@ WhisperNode::WhisperNode() : Node("whisper_node"), keep_running_(true) {
   audio_->clear();
 
   // Publisher
-  pub_ = this->create_publisher<std_msgs::msg::String>("whisper/text", 10);
+  const std::string output_topic = get_parameter("output_topic").as_string();
+  pub_ =
+      this->create_publisher<std_msgs::msg::String>(output_topic, QUEUE_SIZE);
+
+  // Subscriber
+  const std::string audio_topic = get_parameter("audio_in_topic").as_string();
   subscription_ = this->create_subscription<audio_tools::msg::AudioDataStamped>(
-      "/audio_stamped", 10,
+      audio_topic, QUEUE_SIZE,
       std::bind(&WhisperNode::audio_cb, this, std::placeholders::_1));
 
-  // Background thread
+  // Start background worker thread
   worker_thread_ = std::thread(&WhisperNode::processAudio, this);
 }
 
@@ -55,7 +73,8 @@ void WhisperNode::audio_cb(
     return;
   // Convert int16_t audio to float [-1.0, 1.0]
   size_t n_samples = audio.data.size() / sizeof(int16_t);
-  const int16_t* raw_samples = reinterpret_cast<const int16_t*>(audio.data.data());
+  const int16_t *raw_samples =
+      reinterpret_cast<const int16_t *>(audio.data.data());
 
   std::vector<float> float_audio(n_samples);
   for (size_t i = 0; i < n_samples; ++i) {
@@ -126,25 +145,26 @@ void WhisperNode::processAudio() {
   std::vector<float> buffer;
 
   while (rclcpp::ok() && keep_running_) {
-    audio_->get(2000, buffer);
+    audio_->get(AUDIO_BUFFER_SIZE_MS, buffer);
+
     bool voice_activity_detected =
-        vad_simple(buffer, WHISPER_SAMPLE_RATE, 1250, vad_threshold_,
+        vad_simple(buffer, WHISPER_SAMPLE_RATE, VAD_LOOKBACK_MS, vad_threshold_,
                    freq_threshold_, false);
+
     if (voice_activity_detected) {
       RCLCPP_INFO(this->get_logger(), "Voice detected");
+
       audio_->get(voice_duration_ms_, buffer);
       std::string result = whisper_->do_inference(buffer);
 
       if (!result.empty()) {
-        auto msg = std_msgs::msg::String();
+        std_msgs::msg::String msg;
         msg.data = result;
         pub_->publish(msg);
       }
 
       audio_->clear();
     }
-
-    // std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 }
 
