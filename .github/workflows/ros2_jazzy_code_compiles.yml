@@ -23,7 +23,15 @@ jobs:
       - name: Install required packages
         # To compile and run the code we require cmake, ninja and opencv
         run: sudo apt-get update && sudo apt-get install build-essential cmake ninja-build ros-jazzy-diagnostic-updater libsdl2-dev
-
+      - name: Download and install audio_tools package
+        run: |
+            curl -s https://api.github.com/repos/CLFML/ROS2_Audio_Tools/releases/latest \
+            | grep "browser_download_url.*deb" \
+            | cut -d : -f 2,3 \
+            | tr -d \" \
+            | wget -qi -
+            
+            sudo dpkg -i *.deb
       - name: Install dependencies
         working-directory: ${{ github.workspace }}
         run: |
