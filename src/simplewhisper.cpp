@@ -188,9 +188,7 @@ std::string SimpleWhisper::do_inference(std::vector<float> &audio_samples) {
   text_heard = std::regex_replace(text_heard, std::regex("^\\s+"), "");
   text_heard = std::regex_replace(text_heard, std::regex("\\s+$"), "");
 
-  text_heard.insert(0, 1, ' ');
-  text_heard += "\n" + std::string("LLama") + ":";
-  fprintf(stdout, "%s%s%s", "\033[1m", text_heard.c_str(), "\033[0m");
+  fprintf(stdout, "%s%s%s", "\033[1m", text_heard.c_str(), "\n\033[0m");
   fflush(stdout);
 
   return text_heard;
