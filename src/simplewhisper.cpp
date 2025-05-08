@@ -151,7 +151,7 @@ void SimpleWhisper::init() {
 std::string SimpleWhisper::do_inference(std::vector<float> &audio_samples) {
   std::string all_heard;
   all_heard = ::trim(::transcribe(m_ctx_wsp, m_params, audio_samples,
-                                  k_prompt_whisper, m_prob0, m_t_ms));
+                                  "", m_prob0, m_t_ms));
   const auto words = get_words(all_heard);
 
   std::string wake_cmd_heard;

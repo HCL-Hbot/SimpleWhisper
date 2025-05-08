@@ -153,7 +153,7 @@ void WhisperNode::processAudio() {
 
     if (voice_activity_detected) {
       RCLCPP_INFO(this->get_logger(), "Voice detected");
-
+      buffer.clear();
       audio_->get(voice_duration_ms_, buffer);
       std::string result = whisper_->do_inference(buffer);
 
@@ -161,8 +161,8 @@ void WhisperNode::processAudio() {
         std_msgs::msg::String msg;
         msg.data = result;
         pub_->publish(msg);
-        audio_->clear();
       }
+      audio_->clear();
     }
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
